@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Windows 11 Calendar</title>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+      <link rel="stylesheet" href="style.css" />
+   </head>
+
+   <body>
+      <div class="calendar-container">
+         <div class="header">
+            <div class="container">
+               <div class="current-date" onclick="goToToday()">
+                  <span id="currentDateText">Sunday, June 29</span>
+                  <i class="fas fa-chevron-down dropdown-arrow" onclick="toggleCalendar(event)"></i>
+               </div>
+            </div>
+         </div>
+
+         <div class="calendar-body">
+            <div class="month-year-nav">
+               <span class="month-year-label" id="monthYearLabel" onclick="toggleView()">June 2025</span>
+               <div class="nav-arrows">
+                  <button class="nav-btn" onclick="changePeriod(-1)">
+                     <i class="fa-solid fa-caret-up"></i>
+                  </button>
+                  <button class="nav-btn" onclick="changePeriod(1)">
+                     <i class="fa-solid fa-caret-down"></i>
+                  </button>
+               </div>
+            </div>
+
+            <div class="weekdaysContainer" id="weekdaysContainer"></div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+         </div>
+
+         <div class="bottom-controls">
+            <div class="time-controls">
+               <button class="time-btn" onclick="adjustTime(-30)">
+                  <i class="fas fa-minus"></i>
+               </button>
+               <span class="time-display">30 mins</span>
+               <button class="time-btn" onclick="adjustTime(30)">
+                  <i class="fas fa-plus"></i>
+               </button>
+            </div>
+
+            <button class="focus-btn" onclick="toggleFocus()">
+               <i class="fas fa-play play-icon"></i>
+               <span>Focus</span>
+            </button>
+         </div>
+      </div>
+
+      <script src="script.js"></script>
+   </body>
+</html>
