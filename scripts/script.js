@@ -16,6 +16,8 @@ let selectedDate = null;
 let view = 'days'; // days, months, years
 let timeMinutes = 30;
 let isCollapsed = false;
+let isScrolling = false;      // ← MỚI: Kiểm soát trạng thái scroll
+let scrollTimeout = null;     // ← MỚI: Timeout cho animation
 
 function updateCurrentDate() {
     const todayStr = dayNames[today.getDay()] + ', ' + 
@@ -253,5 +255,64 @@ function goToToday() {
     render();
 }
 
+function handleWheel(event) {
+    event.preventDefault();
+    
+    if (!isCollapsed && !isScrolling) {
+        const delta = event.deltaY;
+        const calendarGrid = document.getElementById('calendarGrid');
+        
+        // ← MỚI: Thêm smooth transition
+        calendarGrid.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
+        
+        // ← MỚI: Animation slide + fade
+        if (delta > 0) {
+            calendarGrid.style.transform = 'translateY(-20px)';
+            calendarGrid.style.opacity = '0.3';
+        } else {
+            calendarGrid.style.transform = 'translateY(20px)';
+            calendarGrid.style.opacity = '0.3';
+        }
+        
+        isScrolling = true;
+        
+        // ← MỚI: Timing control
+        if (scrollTimeout) {
+            clearTimeout(scrollTimeout);
+        }
+        
+        // ← MỚI: Delayed period change với animation reset
+        scrollTimeout = setTimeout(() => {
+            if (delta > 0) {
+                changePeriod(1);
+            } else {
+                changePeriod(-1);
+            }
+            
+            setTimeout(() => {
+                calendarGrid.style.transform = 'translateY(0)';
+                calendarGrid.style.opacity = '1';
+                
+                setTimeout(() => {
+                    calendarGrid.style.transition = '';
+                    isScrolling = false;
+                }, 300);
+            }, 50);
+            
+        }, 150);
+    }
+}
+
+// ← MỚI: Throttling wrapper
+let wheelTimeout = null;
+document.querySelector('.calendar-container').addEventListener('wheel', (event) => {
+    if (wheelTimeout) return;
+    
+    handleWheel(event);
+    
+    wheelTimeout = setTimeout(() => {
+        wheelTimeout = null;
+    }, 400);
+}, { passive: false });
 // Initialize
 render();
