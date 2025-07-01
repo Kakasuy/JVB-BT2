@@ -87,7 +87,6 @@ body {
     cursor: pointer;
     color: #ffffff;
     border-radius: 4px;
-    
 }
 
 .month-year-label:hover {
@@ -238,7 +237,7 @@ body {
 
 .time-btn {
     background-color: #323238;
-    border: 0.5px solid #404046;;
+    border: 0.5px solid #404046;
     color: #888;
     cursor: pointer;
     font-size: 12px;
@@ -282,6 +281,68 @@ body {
     color: #fff;
 }
 
+.focus-btn.active {
+    background: #69C2CA;
+    color: #000;
+}
+
+.focus-btn.active:hover {
+    background: #90C7CB;
+}
+
 .play-icon {
     font-size: 12px;
+}
+
+/* Timer styles */
+.timer-display {
+    font-size: 16px;
+    color: #69C2CA;
+    font-weight: 600;
+    min-width: 70px;
+    text-align: center;
+    display: none;
+}
+
+.timer-display.active {
+    display: block;
+}
+
+.timer-display.warning {
+    color: #ff6b6b;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.timer-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.timer-btn {
+    background-color: #323238;
+    border: 0.5px solid #404046;
+    color: #888;
+    cursor: pointer;
+    font-size: 10px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.timer-btn.active {
+    display: flex;
+}
+
+.timer-btn:hover {
+    background: #404040;
+    color: #fff;
 }

@@ -13,11 +13,17 @@ const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frida
 let today = new Date();
 let viewDate = new Date();
 let selectedDate = null;
-let view = 'days'; // days, months, years
+let view = 'days';
 let timeMinutes = 30;
 let isCollapsed = false;
-let isScrolling = false;      // ← MỚI: Kiểm soát trạng thái scroll
-let scrollTimeout = null;     // ← MỚI: Timeout cho animation
+let isScrolling = false;
+let scrollTimeout = null;
+
+// Timer variables
+let timerInterval = null;
+let timerSeconds = 0;
+let isTimerRunning = false;
+let isTimerPaused = false;
 
 function updateCurrentDate() {
     const todayStr = dayNames[today.getDay()] + ', ' + 
@@ -98,8 +104,8 @@ function render() {
             calendarGrid.appendChild(cell);
         }
 
-        // Next month days - always show 6 weeks (42 cells total)
-        const totalCells = 42; // 6 weeks × 7 days
+        // Next month days
+        const totalCells = 42;
         const remainingCells = totalCells - (firstDay + daysInMonth);
         for (let d = 1; d <= remainingCells; d++) {
             const cell = document.createElement('div');
@@ -120,7 +126,6 @@ function render() {
         calendarGrid.className = 'calendar-grid months';
         monthYearLabel.textContent = `${year}`;
         
-        // Add extra months for the layout
         const allMonths = [...monthNamesShort, ...monthNamesShort.slice(0, 4)];
         
         for (let m = 0; m < 16; m++) {
@@ -129,7 +134,6 @@ function render() {
             cell.textContent = allMonths[m];
             
             if (m < 12) {
-                // Current year months
                 const isCurrentMonth = m === today.getMonth() && year === today.getFullYear();
                 if (isCurrentMonth) cell.classList.add('today');
                 
@@ -139,7 +143,6 @@ function render() {
                     render();
                 };
             } else {
-                // Next year months (m >= 12)
                 const nextYearMonth = m - 12;
                 cell.classList.add('next-year');
                 cell.style.color = '#666';
@@ -175,7 +178,6 @@ function render() {
             }
             
             cell.onclick = () => {
-                // Allow clicking on any year, not just the main range
                 viewDate.setFullYear(y);
                 view = 'months';
                 render();
@@ -208,22 +210,145 @@ function toggleView() {
 }
 
 function adjustTime(minutes) {
+    if (isTimerRunning) return; // Prevent changing time while timer is running
+    
     timeMinutes += minutes;
     if (timeMinutes <= 0) timeMinutes = 30;
     if (timeMinutes > 240) timeMinutes = 240;
     
-    const timeDisplay = document.querySelector('.time-display');
+    const timeDisplay = document.getElementById('timeDisplay');
     timeDisplay.textContent = `${timeMinutes} mins`;
+    
+    // Update timer display if visible
+    const timerDisplay = document.getElementById('timerDisplay');
+    if (timerDisplay.classList.contains('active')) {
+        timerSeconds = timeMinutes * 60;
+        updateTimerDisplay();
+    }
 }
 
 function toggleFocus() {
-    // Placeholder function for Focus button
-    console.log('Focus mode toggled');
+    const focusBtn = document.getElementById('focusBtn');
+    const focusIcon = document.getElementById('focusIcon');
+    const focusText = document.getElementById('focusText');
+    const timeDisplay = document.getElementById('timeDisplay');
+    const timerDisplay = document.getElementById('timerDisplay');
+    const stopBtn = document.getElementById('stopBtn');
+
+    if (!isTimerRunning && !isTimerPaused) {
+        // Start timer
+        startTimer();
+        focusBtn.classList.add('active');
+        focusIcon.className = 'fas fa-pause';
+        focusText.textContent = 'Pause';
+        timeDisplay.style.display = 'none';
+        timerDisplay.classList.add('active');
+        stopBtn.classList.add('active');
+    } else if (isTimerRunning) {
+        // Pause timer
+        pauseTimer();
+    } else if (isTimerPaused) {
+        // Resume timer
+        resumeTimer();
+        focusIcon.className = 'fas fa-pause';
+        focusText.textContent = 'Pause';
+    }
 }
 
+function startTimer() {
+    timerSeconds = timeMinutes * 60;
+    isTimerRunning = true;
+    isTimerPaused = false;
+    updateTimerDisplay();
+    
+    timerInterval = setInterval(() => {
+        timerSeconds--;
+        updateTimerDisplay();
+        
+        if (timerSeconds <= 0) {
+            timerComplete();
+        }
+    }, 1000);
+}
+
+function pauseTimer() {
+    if (isTimerRunning) {
+        clearInterval(timerInterval);
+        isTimerRunning = false;
+        isTimerPaused = true;
+        
+        const focusIcon = document.getElementById('focusIcon');
+        const focusText = document.getElementById('focusText');
+        focusIcon.className = 'fas fa-play';
+        focusText.textContent = 'Resume';
+    }
+}
+
+function resumeTimer() {
+    if (isTimerPaused) {
+        isTimerRunning = true;
+        isTimerPaused = false;
+        
+        timerInterval = setInterval(() => {
+            timerSeconds--;
+            updateTimerDisplay();
+            
+            if (timerSeconds <= 0) {
+                timerComplete();
+            }
+        }, 1000);
+    }
+}
+
+function stopTimer() {
+    clearInterval(timerInterval);
+    isTimerRunning = false;
+    isTimerPaused = false;
+    
+    const focusBtn = document.getElementById('focusBtn');
+    const focusIcon = document.getElementById('focusIcon');
+    const focusText = document.getElementById('focusText');
+    const timeDisplay = document.getElementById('timeDisplay');
+    const timerDisplay = document.getElementById('timerDisplay');
+    const stopBtn = document.getElementById('stopBtn');
+    
+    focusBtn.classList.remove('active');
+    focusIcon.className = 'fas fa-play';
+    focusText.textContent = 'Focus';
+    timeDisplay.style.display = 'block';
+    timerDisplay.classList.remove('active', 'warning');
+    stopBtn.classList.remove('active');
+}
+
+function timerComplete() {
+    clearInterval(timerInterval);
+    isTimerRunning = false;
+    isTimerPaused = false;
+    
+    // Show notification or alert
+    alert('Focus session completed!');
+    
+    // Reset UI
+    stopTimer();
+}
+
+function updateTimerDisplay() {
+    const timerDisplay = document.getElementById('timerDisplay');
+    const minutes = Math.floor(timerSeconds / 60);
+    const seconds = timerSeconds % 60;
+    
+    timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    
+    // Add warning style when less than 1 minute left
+    if (timerSeconds <= 60) {
+        timerDisplay.classList.add('warning');
+    } else {
+        timerDisplay.classList.remove('warning');
+    }
+}
 
 function toggleCalendar(event) {
-    event.stopPropagation(); // Prevent triggering goToToday()
+    event.stopPropagation();
     
     const calendarBody = document.querySelector('.calendar-body');
     const calendarContainer = document.querySelector('.calendar-container');
@@ -243,15 +368,10 @@ function toggleCalendar(event) {
 }
 
 function goToToday() {
-    // Reset về ngày hiện tại
     today = new Date();
     viewDate = new Date(today);
     view = 'days';
-    
-    // Clear selection
     selectedDate = null;
-    
-    // Re-render calendar
     render();
 }
 
@@ -262,10 +382,8 @@ function handleWheel(event) {
         const delta = event.deltaY;
         const calendarGrid = document.getElementById('calendarGrid');
         
-        // ← MỚI: Thêm smooth transition
         calendarGrid.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
         
-        // ← MỚI: Animation slide + fade
         if (delta > 0) {
             calendarGrid.style.transform = 'translateY(-20px)';
             calendarGrid.style.opacity = '0.3';
@@ -276,12 +394,10 @@ function handleWheel(event) {
         
         isScrolling = true;
         
-        // ← MỚI: Timing control
         if (scrollTimeout) {
             clearTimeout(scrollTimeout);
         }
         
-        // ← MỚI: Delayed period change với animation reset
         scrollTimeout = setTimeout(() => {
             if (delta > 0) {
                 changePeriod(1);
@@ -303,7 +419,6 @@ function handleWheel(event) {
     }
 }
 
-// ← MỚI: Throttling wrapper
 let wheelTimeout = null;
 document.querySelector('.calendar-container').addEventListener('wheel', (event) => {
     if (wheelTimeout) return;
@@ -314,5 +429,6 @@ document.querySelector('.calendar-container').addEventListener('wheel', (event) 
         wheelTimeout = null;
     }, 400);
 }, { passive: false });
+
 // Initialize
 render();
